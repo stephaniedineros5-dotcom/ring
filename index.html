@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>3D Diamond Ring - @jin_22ee</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #05050a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+            font-family: monospace;
+            color: #9090b0;
+        }
+        canvas {
+            box-shadow: 0 0 50px rgba(0,0,0,0.9);
+            border-radius: 8px;
+        }
+        #info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div id="info">@jin_22ee — 3D Diamond Ring</div>
+    <canvas id="canvas" width="800" height="800"></canvas>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const WIDTH = 800;
+        const HEIGHT = 800;
+
+        // Generate 3D ring & diamond points
+        let points = [];
+        for (let t = 0; t < Math.PI * 2; t += 0.08) {
+            for (let p = 0; p < Math.PI * 2; p += 0.3) {
+                let R = 0.8, r = 0.25;
+                let x = (R + r * Math.cos(p)) * Math.cos(t);
+                let y = (R + r * Math.cos(p)) * Math.sin(t);
+                let z = r * Math.sin(p) - 0.5;
+                points.push([x, y, z]);
+            }
+        }
+        for (let h = -0.5; h <= 0.0; h += 0.04) {
+            let r = 0.3 * (1.0 + h / 0.5);
+            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                points.push([r * Math.cos(a), r * Math.sin(a), h + 0.8]);
+            }
+        }
+        for (let h = 0.0; h <= 0.35; h += 0.04) {
+            let r = 0.3 * (1.0 - h / 0.7);
+            for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                points.push([r * Math.cos(a), r * Math.sin(a), h + 0.8]);
+            }
+        }
+
+        let rotX = 0, rotY = 0;
+
+        function animate() {
+            ctx.fillStyle = '#05050a';
+            ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+            rotY += 0.015;
+            rotX += 0.008;
+
+            let cosX = Math.cos(rotX), sinX = Math.sin(rotX);
+            let cosY = Math.cos(rotY), sinY = Math.sin(rotY);
+
+            let projected = [];
+            for (let pt of points) {
+                // Rotate Y
+                let x1 = pt[0] * cosY + pt[2] * sinY;
+                let y1 = pt[1];
+                let z1 = -pt[0] * sinY + pt[2] * cosY;
+
+                // Rotate X
+                let x2 = x1;
+                let y2 = y1 * cosX - z1 * sinX;
+                let z2 = y1 * sinX + z1 * cosX;
+
+                let zDepth = z2 + 3.5;
+                let f = 300 / zDepth;
+                let x2d = WIDTH / 2 + x2 * f;
+                let y2d = HEIGHT / 2 - y2 * f;
+                let brightness = Math.max(40, Math.min(255, (z2 + 1) * 90 + 100));
+
+                projected.push({x: x2d, y: y2d, b: brightness, z: zDepth});
+            }
+
+            projected.sort((a, b) => b.z - a.z);
+
+            for (let p of projected) {
+                ctx.fillStyle = rgb(${p.b}, ${p.b}, ${Math.min(255, p.b + 40)});
+                ctx.fillRect(p.x, p.y, 2, 2);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
+</body>
+</html>
